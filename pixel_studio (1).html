@@ -1,0 +1,1889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>PixelStudio - Advanced Image Editor</title>
+    
+    <!-- Google Fonts - Manrope -->
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --secondary: #8b5cf6;
+            --accent: #ec4899;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            
+            /* Light mode */
+            --light-bg-0: #ffffff;
+            --light-bg-1: #f8fafc;
+            --light-bg-2: #f1f5f9;
+            --light-bg-3: #e2e8f0;
+            --light-text-0: #0f172a;
+            --light-text-1: #334155;
+            --light-text-2: #64748b;
+            --light-border: #cbd5e1;
+            
+            /* Dark mode */
+            --dark-bg-0: #0a0e27;
+            --dark-bg-1: #0f172a;
+            --dark-bg-2: #1e293b;
+            --dark-bg-3: #334155;
+            --dark-text-0: #f1f5f9;
+            --dark-text-1: #cbd5e1;
+            --dark-text-2: #94a3b8;
+            --dark-border: #475569;
+            
+            /* Default to dark */
+            --bg-0: var(--dark-bg-0);
+            --bg-1: var(--dark-bg-1);
+            --bg-2: var(--dark-bg-2);
+            --bg-3: var(--dark-bg-3);
+            --text-0: var(--dark-text-0);
+            --text-1: var(--dark-text-1);
+            --text-2: var(--dark-text-2);
+            --border: var(--dark-border);
+        }
+
+        html.light-mode {
+            --bg-0: var(--light-bg-0);
+            --bg-1: var(--light-bg-1);
+            --bg-2: var(--light-bg-2);
+            --bg-3: var(--light-bg-3);
+            --text-0: var(--light-text-0);
+            --text-1: var(--light-text-1);
+            --text-2: var(--light-text-2);
+            --border: var(--light-border);
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-0) 0%, var(--bg-1) 100%);
+            color: var(--text-0);
+            font-family: 'Manrope', sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* Main Layout */
+        .editor-wrapper {
+            display: flex;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-2);
+            border-bottom: 1px solid var(--border);
+            padding: 0.75rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            z-index: 100;
+            flex-wrap: wrap;
+            min-height: 56px;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 700;
+            font-size: 1.125rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            white-space: nowrap;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.5rem 0.875rem;
+            border: 1px solid var(--border);
+            background: var(--bg-2);
+            color: var(--text-0);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            white-space: nowrap;
+            font-family: 'Manrope', sans-serif;
+            min-height: 36px;
+        }
+
+        .btn:hover {
+            background: var(--bg-3);
+            border-color: var(--primary);
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border: none;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-sm {
+            padding: 0.4rem 0.7rem;
+            font-size: 0.75rem;
+            min-height: 32px;
+        }
+
+        .btn-icon {
+            padding: 0.5rem;
+            min-width: 36px;
+            justify-content: center;
+        }
+
+        /* Main Content Area */
+        .content-area {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            gap: 0;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: var(--bg-2);
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            z-index: 50;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.hidden {
+            transform: translateX(-100%);
+            position: absolute;
+            left: 0;
+            top: 56px;
+            height: calc(100vh - 56px);
+            width: 280px;
+            z-index: 99;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .sidebar-section {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-title {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-2);
+            letter-spacing: 0.5px;
+            margin-bottom: 0.75rem;
+        }
+
+        /* Tools */
+        .tools {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+
+        .tool-btn {
+            padding: 0.75rem;
+            border: 2px solid transparent;
+            background: var(--bg-3);
+            color: var(--text-0);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            text-align: center;
+            transition: all 0.2s ease;
+            font-family: 'Manrope', sans-serif;
+            font-weight: 600;
+        }
+
+        .tool-btn:hover {
+            background: rgba(99, 102, 241, 0.15);
+            border-color: var(--primary);
+        }
+
+        .tool-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Input Controls */
+        .control-group {
+            margin-bottom: 0.875rem;
+        }
+
+        .control-label {
+            font-size: 0.8rem;
+            color: var(--text-1);
+            margin-bottom: 0.4rem;
+            display: block;
+            font-weight: 600;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 4px;
+            border-radius: 2px;
+            background: var(--bg-3);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 8px rgba(99, 102, 241, 0.6);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            border: none;
+        }
+
+        input[type="color"] {
+            width: 100%;
+            height: 40px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        select, input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 0.6rem;
+            background: var(--bg-3);
+            border: 1px solid var(--border);
+            color: var(--text-0);
+            border-radius: 6px;
+            font-family: 'Manrope', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: var(--bg-3);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        /* Canvas Area */
+        .canvas-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .canvas-toolbar {
+            background: var(--bg-2);
+            border-bottom: 1px solid var(--border);
+            padding: 0.75rem 0.875rem;
+            display: flex;
+            gap: 0.875rem;
+            align-items: center;
+            flex-wrap: wrap;
+            overflow-x: auto;
+            min-height: 48px;
+        }
+
+        .canvas-toolbar-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .canvas-toolbar-separator {
+            width: 1px;
+            height: 24px;
+            background: var(--border);
+        }
+
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: auto;
+            background: var(--bg-1);
+            position: relative;
+            cursor: crosshair;
+        }
+
+        canvas {
+            display: block;
+            background: white;
+            cursor: crosshair;
+        }
+
+        /* Right Sidebar */
+        .right-sidebar {
+            width: 260px;
+            background: var(--bg-2);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .right-sidebar.hidden {
+            transform: translateX(100%);
+            position: absolute;
+            right: 0;
+            top: 56px;
+            height: calc(100vh - 56px);
+            z-index: 99;
+            box-shadow: -2px 0 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 0.75rem;
+            background: transparent;
+            border: none;
+            color: var(--text-2);
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+            font-family: 'Manrope', sans-serif;
+        }
+
+        .tab:hover {
+            color: var(--text-0);
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+
+        .tab-content:not(.active) {
+            display: none;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            background: var(--bg-2);
+            border-top: 1px solid var(--border);
+            padding: 0.75rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: var(--text-2);
+            flex-wrap: wrap;
+            gap: 1rem;
+            min-height: 44px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            white-space: nowrap;
+        }
+
+        /* Modals */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            max-width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            width: 100%;
+        }
+
+        .modal-header {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--text-0);
+        }
+
+        .modal-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-section-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-1);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .preset-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .preset-item {
+            padding: 0.875rem;
+            background: var(--bg-3);
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .preset-item:hover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.15);
+        }
+
+        .preset-size {
+            font-size: 0.7rem;
+            color: var(--text-2);
+            margin-top: 0.4rem;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 1rem;
+            background: var(--bg-2);
+            color: var(--text-0);
+            padding: 1rem 1.25rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--success);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            z-index: 2000;
+            animation: slideIn 0.3s ease-out;
+            max-width: 300px;
+            font-size: 0.875rem;
+        }
+
+        .toast.error {
+            border-left-color: var(--danger);
+        }
+
+        .toast.info {
+            border-left-color: var(--primary);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Time Stats Popup */
+        .time-stats {
+            position: fixed;
+            bottom: 2rem;
+            right: 1rem;
+            background: var(--bg-2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            z-index: 1500;
+            animation: slideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 8px 32px rgba(99, 102, 241, 0.2);
+            max-width: 300px;
+            font-size: 0.875rem;
+        }
+
+        .time-stats-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .time-stats-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.625rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .time-stats-row:last-child {
+            border-bottom: none;
+        }
+
+        .time-stats-label {
+            color: var(--text-2);
+        }
+
+        .time-stats-value {
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        /* Hidden Elements */
+        input[type="file"] {
+            display: none;
+        }
+
+        /* Toggle Switch */
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            background: var(--bg-3);
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(99, 102, 241, 0.15);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-2);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-2);
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 240px;
+            }
+
+            .right-sidebar {
+                width: 240px;
+            }
+
+            .canvas-toolbar {
+                gap: 0.6rem;
+                padding: 0.6rem;
+            }
+
+            .btn-sm {
+                padding: 0.3rem 0.6rem;
+                font-size: 0.7rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 0.6rem;
+                gap: 0.5rem;
+            }
+
+            .header-brand {
+                font-size: 1rem;
+            }
+
+            .sidebar {
+                width: 100%;
+                position: fixed;
+                left: 0;
+                top: 56px;
+                height: calc(100vh - 56px);
+                transform: translateX(-100%);
+                z-index: 99;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .sidebar.hidden {
+                transform: translateX(0);
+            }
+
+            .right-sidebar {
+                display: none;
+            }
+
+            .right-sidebar.hidden {
+                display: flex;
+                transform: translateX(0);
+            }
+
+            .content-area {
+                width: 100%;
+            }
+
+            .canvas-toolbar {
+                padding: 0.5rem 0.6rem;
+                gap: 0.4rem;
+                font-size: 0.7rem;
+            }
+
+            .btn {
+                padding: 0.4rem 0.6rem;
+                font-size: 0.75rem;
+                min-height: 32px;
+            }
+
+            .canvas-toolbar-separator {
+                display: none;
+            }
+
+            .modal {
+                padding: 1.25rem;
+                border-radius: 12px;
+            }
+
+            .modal-header {
+                font-size: 1.125rem;
+            }
+
+            .preset-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .status-bar {
+                padding: 0.6rem;
+                gap: 0.5rem;
+                font-size: 0.7rem;
+                min-height: 40px;
+            }
+
+            .time-stats {
+                bottom: 1rem;
+                right: 0.5rem;
+                left: 0.5rem;
+                max-width: none;
+            }
+
+            .toast {
+                bottom: 1rem;
+                right: 0.5rem;
+                left: 0.5rem;
+                max-width: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                padding: 0.5rem;
+                min-height: 48px;
+            }
+
+            .header-brand {
+                font-size: 0.95rem;
+            }
+
+            .header-actions {
+                gap: 0.4rem;
+                width: 100%;
+                margin-top: 0.5rem;
+            }
+
+            .btn {
+                flex: 1;
+                padding: 0.35rem 0.5rem;
+                font-size: 0.7rem;
+                min-height: 30px;
+            }
+
+            .sidebar {
+                width: 100%;
+            }
+
+            .tools {
+                grid-template-columns: 1fr;
+            }
+
+            .canvas-toolbar {
+                padding: 0.4rem;
+                gap: 0.3rem;
+                overflow-x: auto;
+            }
+
+            .status-bar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.3rem;
+                padding: 0.5rem;
+            }
+
+            .preset-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.5rem;
+            }
+
+            .preset-item {
+                padding: 0.75rem;
+            }
+
+            .modal {
+                padding: 1rem;
+                max-width: 95%;
+            }
+
+            .theme-toggle {
+                padding: 0.4rem;
+                gap: 0.3rem;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Toolbar back button */
+        .toolbar-back {
+            margin-right: auto;
+        }
+
+        .sidebar-back {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .back-btn {
+            width: 100%;
+            text-align: left;
+            padding: 0.75rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="editor-wrapper">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-brand">🎨 PixelStudio</div>
+            <div class="header-actions">
+                <button class="btn btn-sm" id="menuBtn" title="Toggle Menu">☰ Menu</button>
+                <button class="btn btn-sm" id="newBtn" title="New Document">📄 New</button>
+                <button class="btn btn-sm" id="openBtn" title="Open Image">📁 Open</button>
+                <button class="btn btn-primary btn-sm" id="exportBtn" title="Export">⬇ Export</button>
+                <button class="theme-toggle" id="themeToggle" title="Toggle Dark/Light Mode">
+                    <span id="themeIcon">🌙</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content-area">
+            <!-- Left Sidebar - Tools -->
+            <div class="sidebar hidden" id="leftSidebar">
+                <div class="sidebar-back">
+                    <button class="btn btn-sm back-btn" id="closeSidebarBtn">← Back to Canvas</button>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-title">Tools</div>
+                    <div class="tools">
+                        <button class="tool-btn active" data-tool="select">✓ Select</button>
+                        <button class="tool-btn" data-tool="pen">✏️ Pen</button>
+                        <button class="tool-btn" data-tool="eraser">🧹 Eraser</button>
+                        <button class="tool-btn" data-tool="text">📝 Text</button>
+                        <button class="tool-btn" data-tool="shape">⬜ Shape</button>
+                        <button class="tool-btn" data-tool="filter">🎭 Filter</button>
+                    </div>
+                </div>
+
+                <!-- Pen Settings -->
+                <div class="sidebar-section" id="penSettings" style="display: none;">
+                    <div class="sidebar-title">Pen Settings</div>
+                    
+                    <div class="control-group">
+                        <label class="control-label">Color</label>
+                        <input type="color" id="penColor" value="#ffffff">
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Size: <span id="sizeValue">5</span>px</label>
+                        <input type="range" id="penSize" min="1" max="50" value="5">
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Opacity: <span id="opacityValue">100</span>%</label>
+                        <input type="range" id="penOpacity" min="0" max="100" value="100">
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Brush Type</label>
+                        <select id="brushType">
+                            <option value="round">Round</option>
+                            <option value="square">Square</option>
+                            <option value="soft">Soft</option>
+                            <option value="chalk">Chalk</option>
+                            <option value="marker">Marker</option>
+                            <option value="crayon">Crayon</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Text Settings -->
+                <div class="sidebar-section" id="textSettings" style="display: none;">
+                    <div class="sidebar-title">Text Settings</div>
+                    
+                    <div class="control-group">
+                        <label class="control-label">Color</label>
+                        <input type="color" id="textColor" value="#000000">
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Font</label>
+                        <select id="textFont">
+                            <option value="Manrope">Manrope</option>
+                            <option value="Arial">Arial</option>
+                            <option value="Georgia">Georgia</option>
+                            <option value="Courier New">Courier New</option>
+                            <option value="Times New Roman">Times New Roman</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Size: <span id="fontSizeValue">24</span>px</label>
+                        <input type="range" id="textSize" min="8" max="120" value="24">
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Line Height: <span id="lineHeightValue">1.2</span></label>
+                        <input type="range" id="lineHeight" min="0.8" max="2.5" step="0.1" value="1.2">
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Letter Spacing: <span id="letterSpacingValue">0</span>px</label>
+                        <input type="range" id="letterSpacing" min="-5" max="10" value="0">
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Font Weight</label>
+                        <select id="fontWeight">
+                            <option value="400">Regular</option>
+                            <option value="500">Medium</option>
+                            <option value="600">Semi-Bold</option>
+                            <option value="700">Bold</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Filter Settings -->
+                <div class="sidebar-section" id="filterSettings" style="display: none;">
+                    <div class="sidebar-title">Adjustments</div>
+                    
+                    <div class="control-group">
+                        <label class="control-label">Brightness: <span id="brightnessValue">100</span>%</label>
+                        <input type="range" id="brightness" min="0" max="200" value="100">
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Contrast: <span id="contrastValue">100</span>%</label>
+                        <input type="range" id="contrast" min="0" max="200" value="100">
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Saturation: <span id="saturationValue">100</span>%</label>
+                        <input type="range" id="saturation" min="0" max="200" value="100">
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Hue: <span id="hueValue">0</span>°</label>
+                        <input type="range" id="hue" min="-180" max="180" value="0">
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Blur: <span id="blurValue">0</span>px</label>
+                        <input type="range" id="blur" min="0" max="20" value="0">
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Sharpness: <span id="sharpnessValue">0</span></label>
+                        <input type="range" id="sharpness" min="-10" max="10" value="0">
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Vignette: <span id="vignetteValue">0</span>%</label>
+                        <input type="range" id="vignette" min="0" max="100" value="0">
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Opacity: <span id="imageOpacityValue">100</span>%</label>
+                        <input type="range" id="imageOpacity" min="0" max="100" value="100">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Canvas Area -->
+            <div class="canvas-area">
+                <div class="canvas-toolbar">
+                    <button class="btn btn-sm toolbar-back" id="openSidebarBtn" title="Open Tools Menu">☰ Tools</button>
+                    
+                    <div class="canvas-toolbar-group">
+                        <button class="btn btn-sm" id="zoomInBtn" title="Zoom In">🔍+ Zoom In</button>
+                        <button class="btn btn-sm" id="zoomOutBtn" title="Zoom Out">🔍- Zoom Out</button>
+                        <button class="btn btn-sm" id="fitBtn" title="Fit to Screen">⊡ Fit</button>
+                        <button class="btn btn-sm" id="resetZoomBtn" title="Reset Zoom">100%</button>
+                    </div>
+
+                    <div class="canvas-toolbar-separator"></div>
+
+                    <div class="canvas-toolbar-group">
+                        <button class="btn btn-sm" id="undoBtn" title="Undo">↶ Undo</button>
+                        <button class="btn btn-sm" id="redoBtn" title="Redo">↷ Redo</button>
+                    </div>
+
+                    <div class="canvas-toolbar-separator"></div>
+
+                    <div class="canvas-toolbar-group">
+                        <button class="btn btn-sm" id="flipHBtn" title="Flip Horizontal">↔ Flip H</button>
+                        <button class="btn btn-sm" id="flipVBtn" title="Flip Vertical">↕ Flip V</button>
+                        <button class="btn btn-sm" id="rotateBtn" title="Rotate">↻ Rotate</button>
+                    </div>
+
+                    <span style="font-size: 0.7rem; color: var(--text-2); white-space: nowrap; margin-left: auto;">
+                        <strong id="zoomLevel">100</strong>% | <strong id="canvasDims">0×0</strong>
+                    </span>
+                </div>
+
+                <div class="canvas-container" id="canvasContainer">
+                    <canvas id="canvas"></canvas>
+                </div>
+            </div>
+
+            <!-- Right Sidebar - Layers -->
+            <div class="right-sidebar hidden" id="rightSidebar">
+                <div class="sidebar-back">
+                    <button class="btn btn-sm back-btn" id="closeRightSidebarBtn">← Back to Canvas</button>
+                </div>
+
+                <div class="tabs">
+                    <button class="tab active" data-tab="layers">Layers</button>
+                    <button class="tab" data-tab="adjustments">Adjustments</button>
+                </div>
+
+                <!-- Layers Tab -->
+                <div class="tab-content active" data-tab-content="layers">
+                    <div style="margin-bottom: 1rem;">
+                        <button class="btn btn-sm" style="width: 100%; font-size: 0.8rem;">+ New Layer</button>
+                    </div>
+                    <div class="layers-list" id="layersList">
+                        <div style="padding: 1rem; text-align: center; color: var(--text-2); font-size: 0.875rem;">
+                            Background Layer
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Adjustments Tab -->
+                <div class="tab-content" data-tab-content="adjustments">
+                    <div class="control-group">
+                        <label class="control-label">Brightness</label>
+                        <input type="range" min="0" max="200" value="100" class="adjustment-slider" data-adjustment="brightness">
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Contrast</label>
+                        <input type="range" min="0" max="200" value="100" class="adjustment-slider" data-adjustment="contrast">
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Saturation</label>
+                        <input type="range" min="0" max="200" value="100" class="adjustment-slider" data-adjustment="saturation">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-item">
+                ⏱️ Editing: <strong id="editingTime">0:00</strong>
+            </div>
+            <div class="status-item">
+                📏 Canvas: <strong id="canvasInfo">0×0px</strong>
+            </div>
+            <div class="status-item" id="statusMessage">
+                Ready
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Inputs -->
+    <input type="file" id="fileInput" accept="image/*">
+
+    <!-- Modals -->
+    <!-- New Document Modal -->
+    <div class="modal-overlay" id="newDocModal">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">Create New Document</div>
+
+            <div class="modal-section">
+                <div class="modal-section-title">Presets</div>
+                <div class="preset-grid">
+                    <div class="preset-item" data-preset="1920,1080">
+                        <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">📺</div>
+                        <div style="margin-top: 0.25rem; font-weight: 700; font-size: 0.85rem;">1080p</div>
+                        <div class="preset-size">1920×1080</div>
+                    </div>
+                    <div class="preset-item" data-preset="1024,1024">
+                        <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">⬜</div>
+                        <div style="margin-top: 0.25rem; font-weight: 700; font-size: 0.85rem;">Square</div>
+                        <div class="preset-size">1024×1024</div>
+                    </div>
+                    <div class="preset-item" data-preset="1200,800">
+                        <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">🖼️</div>
+                        <div style="margin-top: 0.25rem; font-weight: 700; font-size: 0.85rem;">Landscape</div>
+                        <div class="preset-size">1200×800</div>
+                    </div>
+                    <div class="preset-item" data-preset="800,1200">
+                        <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">📱</div>
+                        <div style="margin-top: 0.25rem; font-weight: 700; font-size: 0.85rem;">Portrait</div>
+                        <div class="preset-size">800×1200</div>
+                    </div>
+                    <div class="preset-item" data-preset="800,600">
+                        <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">📐</div>
+                        <div style="margin-top: 0.25rem; font-weight: 700; font-size: 0.85rem;">SVGA</div>
+                        <div class="preset-size">800×600</div>
+                    </div>
+                    <div class="preset-item" data-preset="2560,1600">
+                        <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">💻</div>
+                        <div style="margin-top: 0.25rem; font-weight: 700; font-size: 0.85rem;">2K</div>
+                        <div class="preset-size">2560×1600</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-section">
+                <div class="modal-section-title">Custom Size</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div class="control-group">
+                        <label class="control-label">Width</label>
+                        <input type="number" id="customWidth" value="1920" min="1">
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Height</label>
+                        <input type="number" id="customHeight" value="1080" min="1">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Background Color</label>
+                    <input type="color" id="bgColor" value="#ffffff">
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button class="btn btn-primary" id="createDocBtn" style="flex: 1; justify-content: center;">Create Document</button>
+                <button class="btn" id="cancelDocBtn" style="flex: 1; justify-content: center;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div class="modal-overlay" id="exportModal">
+        <div class="modal" style="max-width: 450px;">
+            <div class="modal-header">Export Image</div>
+
+            <div class="control-group">
+                <label class="control-label">Format</label>
+                <select id="exportFormat">
+                    <option value="png">PNG (Lossless)</option>
+                    <option value="jpg">JPG (Compressed)</option>
+                    <option value="webp">WebP (Modern)</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">Quality: <span id="qualityValue">90</span>%</label>
+                <input type="range" id="exportQuality" min="10" max="100" value="90">
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">File Name</label>
+                <input type="text" id="exportName" value="image" placeholder="image">
+            </div>
+
+            <div style="background: var(--bg-3); padding: 1rem; border-radius: 6px; margin: 1.5rem 0; font-size: 0.875rem; color: var(--text-2);">
+                Preview: <strong id="exportPreview">image.png</strong>
+            </div>
+
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn btn-primary" id="confirmExportBtn" style="flex: 1; justify-content: center;">Export</button>
+                <button class="btn" id="cancelExportBtn" style="flex: 1; justify-content: center;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============== STATE MANAGEMENT ==============
+        const state = {
+            canvas: null,
+            ctx: null,
+            currentTool: 'select',
+            isDrawing: false,
+            zoom: 1,
+            panX: 0,
+            panY: 0,
+            history: [],
+            historyStep: -1,
+            startTime: null,
+            editingTime: 0,
+            imageFile: null,
+            isDarkMode: true,
+            lastX: 0,
+            lastY: 0
+        };
+
+        // ============== INITIALIZATION ==============
+        function init() {
+            state.canvas = document.getElementById('canvas');
+            state.ctx = state.canvas.getContext('2d', { willReadFrequently: true });
+            
+            // Load theme preference
+            const savedTheme = localStorage.getItem('pixelstudio-theme');
+            if (savedTheme === 'light') {
+                toggleTheme();
+            }
+
+            setupCanvasSize();
+            setupEventListeners();
+            showNewDocModal();
+            startEditingTimer();
+        }
+
+        function setupCanvasSize() {
+            const container = document.getElementById('canvasContainer');
+            state.canvas.width = 1920;
+            state.canvas.height = 1080;
+            state.ctx.fillStyle = '#ffffff';
+            state.ctx.fillRect(0, 0, state.canvas.width, state.canvas.height);
+            saveCanvasState();
+            updateCanvasInfo();
+        }
+
+        // ============== EVENT LISTENERS ==============
+        function setupEventListeners() {
+            // Theme toggle
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+            // Header buttons
+            document.getElementById('menuBtn').addEventListener('click', toggleLeftSidebar);
+            document.getElementById('newBtn').addEventListener('click', showNewDocModal);
+            document.getElementById('openBtn').addEventListener('click', () => {
+                document.getElementById('fileInput').click();
+            });
+            document.getElementById('exportBtn').addEventListener('click', showExportModal);
+
+            // Sidebar toggles
+            document.getElementById('closeSidebarBtn').addEventListener('click', toggleLeftSidebar);
+            document.getElementById('openSidebarBtn').addEventListener('click', toggleLeftSidebar);
+            document.getElementById('closeRightSidebarBtn').addEventListener('click', toggleRightSidebar);
+
+            // File input
+            document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+
+            // Tool buttons
+            document.querySelectorAll('.tool-btn').forEach(btn => {
+                btn.addEventListener('click', () => selectTool(btn.dataset.tool));
+            });
+
+            // Canvas events
+            state.canvas.addEventListener('mousedown', handleCanvasMouseDown);
+            state.canvas.addEventListener('mousemove', handleCanvasMouseMove);
+            state.canvas.addEventListener('mouseup', handleCanvasMouseUp);
+            state.canvas.addEventListener('mouseleave', handleCanvasMouseUp);
+            state.canvas.addEventListener('wheel', handleCanvasWheel, { passive: false });
+            state.canvas.addEventListener('touchstart', handleTouchStart, { passive: true });
+            state.canvas.addEventListener('touchmove', handleTouchMove, { passive: true });
+            state.canvas.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+            // Canvas toolbar
+            document.getElementById('zoomInBtn').addEventListener('click', () => zoomCanvas(1.2));
+            document.getElementById('zoomOutBtn').addEventListener('click', () => zoomCanvas(0.8333));
+            document.getElementById('fitBtn').addEventListener('click', fitCanvasToView);
+            document.getElementById('resetZoomBtn').addEventListener('click', resetZoom);
+            document.getElementById('undoBtn').addEventListener('click', undo);
+            document.getElementById('redoBtn').addEventListener('click', redo);
+            document.getElementById('flipHBtn').addEventListener('click', () => flipCanvas('h'));
+            document.getElementById('flipVBtn').addEventListener('click', () => flipCanvas('v'));
+            document.getElementById('rotateBtn').addEventListener('click', () => rotateCanvas(90));
+
+            // Pen settings
+            document.getElementById('penColor').addEventListener('change', updatePenColor);
+            document.getElementById('penSize').addEventListener('input', (e) => {
+                document.getElementById('sizeValue').textContent = e.target.value;
+            });
+            document.getElementById('penOpacity').addEventListener('input', (e) => {
+                document.getElementById('opacityValue').textContent = e.target.value;
+            });
+
+            // Text settings
+            document.getElementById('textColor').addEventListener('change', updateTextColor);
+            document.getElementById('textSize').addEventListener('input', (e) => {
+                document.getElementById('fontSizeValue').textContent = e.target.value;
+            });
+            document.getElementById('lineHeight').addEventListener('input', (e) => {
+                document.getElementById('lineHeightValue').textContent = e.target.value;
+            });
+            document.getElementById('letterSpacing').addEventListener('input', (e) => {
+                document.getElementById('letterSpacingValue').textContent = e.target.value;
+            });
+
+            // Filter sliders
+            ['brightness', 'contrast', 'saturation', 'hue', 'blur', 'sharpness', 'vignette', 'imageOpacity'].forEach(id => {
+                const elem = document.getElementById(id);
+                if (elem) {
+                    elem.addEventListener('input', (e) => {
+                        document.getElementById(id + 'Value').textContent = e.target.value;
+                    });
+                }
+            });
+
+            // Modal buttons
+            document.getElementById('createDocBtn').addEventListener('click', createNewDocument);
+            document.getElementById('cancelDocBtn').addEventListener('click', hideNewDocModal);
+            document.getElementById('confirmExportBtn').addEventListener('click', executeExport);
+            document.getElementById('cancelExportBtn').addEventListener('click', hideExportModal);
+
+            // Export format change
+            document.getElementById('exportFormat').addEventListener('change', updateExportPreview);
+            document.getElementById('exportName').addEventListener('input', updateExportPreview);
+
+            // Preset selection
+            document.querySelectorAll('.preset-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const [w, h] = item.dataset.preset.split(',');
+                    document.getElementById('customWidth').value = w;
+                    document.getElementById('customHeight').value = h;
+                });
+            });
+
+            // Tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', switchTab);
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', handleKeyboardShortcuts);
+        }
+
+        // ============== THEME TOGGLE ==============
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isDark = html.classList.contains('light-mode');
+            
+            if (isDark) {
+                html.classList.remove('light-mode');
+                document.getElementById('themeIcon').textContent = '🌙';
+                localStorage.setItem('pixelstudio-theme', 'dark');
+            } else {
+                html.classList.add('light-mode');
+                document.getElementById('themeIcon').textContent = '☀️';
+                localStorage.setItem('pixelstudio-theme', 'light');
+            }
+            
+            updateStatus('Theme changed');
+        }
+
+        // ============== SIDEBAR TOGGLE ==============
+        function toggleLeftSidebar() {
+            document.getElementById('leftSidebar').classList.toggle('hidden');
+        }
+
+        function toggleRightSidebar() {
+            document.getElementById('rightSidebar').classList.toggle('hidden');
+        }
+
+        // ============== TOOL SELECTION ==============
+        function selectTool(tool) {
+            state.currentTool = tool;
+            document.querySelectorAll('.tool-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-tool="${tool}"]`).classList.add('active');
+
+            // Show/hide relevant settings
+            document.querySelectorAll('#penSettings, #textSettings, #filterSettings').forEach(s => s.style.display = 'none');
+            if (tool === 'pen') {
+                document.getElementById('penSettings').style.display = 'block';
+            } else if (tool === 'text') {
+                document.getElementById('textSettings').style.display = 'block';
+            } else if (tool === 'filter') {
+                document.getElementById('filterSettings').style.display = 'block';
+            }
+
+            updateStatus(`${tool.charAt(0).toUpperCase() + tool.slice(1)} tool selected`);
+        }
+
+        // ============== CANVAS DRAWING ==============
+        function handleCanvasMouseDown(e) {
+            if (state.currentTool === 'select') return;
+            
+            state.isDrawing = true;
+            saveCanvasState();
+            
+            const rect = state.canvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / state.zoom;
+            const y = (e.clientY - rect.top) / state.zoom;
+
+            state.lastX = x;
+            state.lastY = y;
+
+            if (state.currentTool === 'pen') {
+                startDrawing(x, y);
+            } else if (state.currentTool === 'eraser') {
+                startErasing(x, y);
+            } else if (state.currentTool === 'text') {
+                handleTextClick(x, y);
+            }
+        }
+
+        function handleCanvasMouseMove(e) {
+            if (!state.isDrawing) return;
+
+            const rect = state.canvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / state.zoom;
+            const y = (e.clientY - rect.top) / state.zoom;
+
+            if (state.currentTool === 'pen') {
+                drawLine(x, y);
+            } else if (state.currentTool === 'eraser') {
+                erase(x, y);
+            }
+
+            state.lastX = x;
+            state.lastY = y;
+        }
+
+        function handleCanvasMouseUp() {
+            state.isDrawing = false;
+        }
+
+        // ============== DRAWING FUNCTIONS ==============
+        function startDrawing(x, y) {
+            const size = parseInt(document.getElementById('penSize').value);
+            const color = document.getElementById('penColor').value;
+            const opacity = parseInt(document.getElementById('penOpacity').value) / 100;
+
+            state.ctx.strokeStyle = color;
+            state.ctx.globalAlpha = opacity;
+            state.ctx.lineWidth = size;
+            state.ctx.lineCap = 'round';
+            state.ctx.lineJoin = 'round';
+            state.ctx.globalCompositeOperation = 'source-over';
+
+            state.ctx.beginPath();
+            state.ctx.moveTo(x, y);
+        }
+
+        function drawLine(x, y) {
+            state.ctx.lineTo(x, y);
+            state.ctx.stroke();
+        }
+
+        function startErasing(x, y) {
+            const size = parseInt(document.getElementById('penSize').value);
+            state.ctx.globalCompositeOperation = 'destination-out';
+            state.ctx.globalAlpha = 1;
+            state.ctx.beginPath();
+            state.ctx.arc(x, y, size / 2, 0, Math.PI * 2);
+            state.ctx.fill();
+        }
+
+        function erase(x, y) {
+            const size = parseInt(document.getElementById('penSize').value);
+            state.ctx.beginPath();
+            state.ctx.arc(x, y, size / 2, 0, Math.PI * 2);
+            state.ctx.fill();
+        }
+
+        function handleTextClick(x, y) {
+            const text = prompt('Enter text:');
+            if (!text) return;
+
+            const font = document.getElementById('textFont').value;
+            const size = parseInt(document.getElementById('textSize').value);
+            const color = document.getElementById('textColor').value;
+            const weight = document.getElementById('fontWeight').value;
+
+            state.ctx.globalAlpha = 1;
+            state.ctx.globalCompositeOperation = 'source-over';
+            state.ctx.font = `${weight} ${size}px "${font}"`;
+            state.ctx.fillStyle = color;
+            state.ctx.textBaseline = 'top';
+
+            state.ctx.fillText(text, x, y);
+            saveCanvasState();
+        }
+
+        // ============== CANVAS MANIPULATION ==============
+        function zoomCanvas(factor) {
+            state.zoom *= factor;
+            state.zoom = Math.max(0.1, Math.min(5, state.zoom));
+            document.getElementById('zoomLevel').textContent = Math.round(state.zoom * 100);
+            applyZoom();
+        }
+
+        function resetZoom() {
+            state.zoom = 1;
+            state.panX = 0;
+            state.panY = 0;
+            document.getElementById('zoomLevel').textContent = '100';
+            applyZoom();
+        }
+
+        function fitCanvasToView() {
+            const container = document.getElementById('canvasContainer');
+            const canvasAspect = state.canvas.width / state.canvas.height;
+            const containerAspect = container.clientWidth / container.clientHeight;
+
+            if (canvasAspect > containerAspect) {
+                state.zoom = (container.clientWidth - 20) / state.canvas.width;
+            } else {
+                state.zoom = (container.clientHeight - 20) / state.canvas.height;
+            }
+
+            state.zoom = Math.max(0.1, Math.min(5, state.zoom));
+            document.getElementById('zoomLevel').textContent = Math.round(state.zoom * 100);
+            applyZoom();
+        }
+
+        function applyZoom() {
+            state.canvas.style.transform = `scale(${state.zoom})`;
+            state.canvas.style.transformOrigin = 'top left';
+        }
+
+        function flipCanvas(direction) {
+            saveCanvasState();
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = state.canvas.width;
+            tempCanvas.height = state.canvas.height;
+            const tempCtx = tempCanvas.getContext('2d');
+
+            tempCtx.drawImage(state.canvas, 0, 0);
+            state.ctx.clearRect(0, 0, state.canvas.width, state.canvas.height);
+
+            state.ctx.save();
+            if (direction === 'h') {
+                state.ctx.scale(-1, 1);
+                state.ctx.translate(-state.canvas.width, 0);
+            } else {
+                state.ctx.scale(1, -1);
+                state.ctx.translate(0, -state.canvas.height);
+            }
+            state.ctx.drawImage(tempCanvas, 0, 0);
+            state.ctx.restore();
+
+            updateStatus(`Flipped ${direction === 'h' ? 'Horizontally' : 'Vertically'}`);
+        }
+
+        function rotateCanvas(degrees) {
+            saveCanvasState();
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+
+            if (Math.abs(degrees) === 90 || Math.abs(degrees) === 270) {
+                tempCanvas.width = state.canvas.height;
+                tempCanvas.height = state.canvas.width;
+            } else {
+                tempCanvas.width = state.canvas.width;
+                tempCanvas.height = state.canvas.height;
+            }
+
+            tempCtx.save();
+            tempCtx.translate(tempCanvas.width / 2, tempCanvas.height / 2);
+            tempCtx.rotate((degrees * Math.PI) / 180);
+            tempCtx.drawImage(state.canvas, -state.canvas.width / 2, -state.canvas.height / 2);
+            tempCtx.restore();
+
+            state.canvas.width = tempCanvas.width;
+            state.canvas.height = tempCanvas.height;
+            state.ctx.drawImage(tempCanvas, 0, 0);
+
+            updateCanvasInfo();
+            updateStatus(`Rotated ${degrees}°`);
+        }
+
+        // ============== HISTORY ==============
+        function saveCanvasState() {
+            state.historyStep++;
+            if (state.historyStep < state.history.length) {
+                state.history.length = state.historyStep;
+            }
+            state.history.push(state.canvas.toDataURL());
+        }
+
+        function undo() {
+            if (state.historyStep > 0) {
+                state.historyStep--;
+                loadCanvasState(state.history[state.historyStep]);
+                updateStatus('Undo');
+            }
+        }
+
+        function redo() {
+            if (state.historyStep < state.history.length - 1) {
+                state.historyStep++;
+                loadCanvasState(state.history[state.historyStep]);
+                updateStatus('Redo');
+            }
+        }
+
+        function loadCanvasState(dataUrl) {
+            const img = new Image();
+            img.onload = () => {
+                state.ctx.clearRect(0, 0, state.canvas.width, state.canvas.height);
+                state.ctx.drawImage(img, 0, 0);
+            };
+            img.src = dataUrl;
+        }
+
+        // ============== FILE HANDLING ==============
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (!file.type.startsWith('image/')) {
+                showToast('Please select a valid image file', 'error');
+                return;
+            }
+
+            state.imageFile = file;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    state.canvas.width = img.width;
+                    state.canvas.height = img.height;
+                    state.ctx.drawImage(img, 0, 0);
+                    saveCanvasState();
+                    updateCanvasInfo();
+                    resetZoom();
+                    updateStatus(`Loaded: ${file.name}`);
+                    showToast(`Image loaded: ${file.name}`, 'success');
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function createNewDocument() {
+            const width = parseInt(document.getElementById('customWidth').value);
+            const height = parseInt(document.getElementById('customHeight').value);
+            const bgColor = document.getElementById('bgColor').value;
+
+            if (width < 1 || height < 1) {
+                showToast('Width and height must be at least 1', 'error');
+                return;
+            }
+
+            state.canvas.width = width;
+            state.canvas.height = height;
+            state.ctx.fillStyle = bgColor;
+            state.ctx.fillRect(0, 0, width, height);
+            state.history = [state.canvas.toDataURL()];
+            state.historyStep = 0;
+
+            updateCanvasInfo();
+            hideNewDocModal();
+            resetZoom();
+            updateStatus(`Created new ${width}×${height} document`);
+            showToast(`Document created: ${width}×${height}`, 'success');
+        }
+
+        // ============== EXPORT ==============
+        function showExportModal() {
+            updateExportPreview();
+            document.getElementById('exportModal').classList.add('active');
+        }
+
+        function hideExportModal() {
+            document.getElementById('exportModal').classList.remove('active');
+        }
+
+        function updateExportPreview() {
+            const format = document.getElementById('exportFormat').value;
+            const name = document.getElementById('exportName').value || 'image';
+            document.getElementById('exportPreview').textContent = `${name}.${format}`;
+        }
+
+        function executeExport() {
+            const format = document.getElementById('exportFormat').value;
+            const name = document.getElementById('exportName').value || 'image';
+            const quality = parseInt(document.getElementById('exportQuality').value) / 100;
+
+            let mimeType = 'image/png';
+            if (format === 'jpg') mimeType = 'image/jpeg';
+            else if (format === 'webp') mimeType = 'image/webp';
+
+            state.canvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `${name}.${format}`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+
+                hideExportModal();
+                showTimeStats();
+                showToast(`Exported: ${name}.${format}`, 'success');
+                updateStatus(`Exported: ${name}.${format}`);
+            }, mimeType, quality);
+        }
+
+        // ============== TIME TRACKING ==============
+        function startEditingTimer() {
+            state.startTime = Date.now();
+            setInterval(() => {
+                if (state.startTime) {
+                    const elapsed = Math.floor((Date.now() - state.startTime) / 1000);
+                    const minutes = Math.floor(elapsed / 60);
+                    const seconds = elapsed % 60;
+                    state.editingTime = elapsed;
+                    document.getElementById('editingTime').textContent = 
+                        `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                }
+            }, 1000);
+        }
+
+        function showTimeStats() {
+            const minutes = Math.floor(state.editingTime / 60);
+            const seconds = state.editingTime % 60;
+            const date = new Date(state.startTime).toLocaleTimeString();
+
+            const statsHtml = `
+                <div class="time-stats">
+                    <div class="time-stats-title">✨ Edit Complete!</div>
+                    <div class="time-stats-row">
+                        <span class="time-stats-label">Editing Time:</span>
+                        <span class="time-stats-value">${minutes}m ${seconds}s</span>
+                    </div>
+                    <div class="time-stats-row">
+                        <span class="time-stats-label">Started At:</span>
+                        <span class="time-stats-value">${date}</span>
+                    </div>
+                    <div class="time-stats-row">
+                        <span class="time-stats-label">Canvas Size:</span>
+                        <span class="time-stats-value">${state.canvas.width}×${state.canvas.height}</span>
+                    </div>
+                </div>
+            `;
+
+            const container = document.body;
+            const existing = container.querySelector('.time-stats');
+            if (existing) existing.remove();
+
+            const div = document.createElement('div');
+            div.innerHTML = statsHtml;
+            container.appendChild(div);
+
+            setTimeout(() => {
+                const elem = container.querySelector('.time-stats');
+                if (elem) elem.remove();
+            }, 8000);
+        }
+
+        // ============== UTILITIES ==============
+        function updateCanvasInfo() {
+            document.getElementById('canvasDims').textContent = `${state.canvas.width}×${state.canvas.height}`;
+            document.getElementById('canvasInfo').textContent = 
+                `${state.canvas.width}×${state.canvas.height}px`;
+        }
+
+        function updateStatus(message) {
+            document.getElementById('statusMessage').textContent = message;
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        function showNewDocModal() {
+            document.getElementById('newDocModal').classList.add('active');
+        }
+
+        function hideNewDocModal() {
+            document.getElementById('newDocModal').classList.remove('active');
+        }
+
+        function updatePenColor() {}
+        function updateTextColor() {}
+
+        function switchTab(e) {
+            const tabName = e.target.dataset.tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('[data-tab-content]').forEach(c => c.classList.remove('active'));
+            e.target.classList.add('active');
+            document.querySelector(`[data-tab-content="${tabName}"]`).classList.add('active');
+        }
+
+        function handleCanvasWheel(e) {
+            e.preventDefault();
+            if (e.deltaY < 0) {
+                zoomCanvas(1.1);
+            } else {
+                zoomCanvas(0.909);
+            }
+        }
+
+        function handleTouchStart(e) {
+            if (e.touches.length === 1) {
+                const touch = e.touches[0];
+                const mouseEvent = new MouseEvent('mousedown', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                });
+                state.canvas.dispatchEvent(mouseEvent);
+            }
+        }
+
+        function handleTouchMove(e) {
+            if (e.touches.length === 1) {
+                const touch = e.touches[0];
+                const mouseEvent = new MouseEvent('mousemove', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                });
+                state.canvas.dispatchEvent(mouseEvent);
+            }
+        }
+
+        function handleTouchEnd(e) {
+            const mouseEvent = new MouseEvent('mouseup', {});
+            state.canvas.dispatchEvent(mouseEvent);
+        }
+
+        function handleKeyboardShortcuts(e) {
+            if (e.ctrlKey || e.metaKey) {
+                if (e.key === 'n') {
+                    e.preventDefault();
+                    showNewDocModal();
+                } else if (e.key === 'o') {
+                    e.preventDefault();
+                    document.getElementById('fileInput').click();
+                } else if (e.key === 'e') {
+                    e.preventDefault();
+                    showExportModal();
+                } else if (e.key === 'z') {
+                    e.preventDefault();
+                    if (e.shiftKey) redo();
+                    else undo();
+                } else if (e.key === '+' || e.key === '=') {
+                    e.preventDefault();
+                    zoomCanvas(1.2);
+                } else if (e.key === '-') {
+                    e.preventDefault();
+                    zoomCanvas(0.8333);
+                }
+            }
+        }
+
+        // ============== START ==============
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+
+</html>
